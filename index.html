@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>国際宇宙ステーション現在位置</title>
+    <meta charset="utf-8" />
+    <link rel = "stylesheet" href = "https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" />
+    <script src = "https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"></script>
+    <script>
+    var space_iss_icon, map, space_iss_marker;
+    function init() {
+        map = L.map('map');
+        map.setView([35.65809922, 139.74135747], 6);
+        L.tileLayer(
+            'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '<a href="https://openstreetmap.org">OpenStreetMap</a>',
+            maxZoom: 18
+        }).addTo(map);
+        space_iss_icon = L.icon({
+            iconUrl: "space_iss.png",
+            iconSize: [48, 48],
+        });
+        space_iss_marker = L.marker([0,0], {icon: space_iss_icon, zIndexOffset: 1000}).addTo(map);
+    }
+
+    var iss_now = function () {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', `http://api.open-notify.org/iss-now.json`);
+        xhr.send();
+        xhr.onreadystatechange = function() {
+            try {
+                if(xhr.readyState === 4) {
+                    var json = JSON.parse(xhr.responseText);
+                    if (json.message == "success") {
+                        console.log(json);
+                        var latlng = [json.iss_position.latitude, json.iss_position.longitude];
+                        space_iss_marker.setLatLng(new L.LatLng( latlng[0], latlng[1] ));
+                        map.setView(latlng);
+                    } else {
+                        console.log(json.message)
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+
+    setInterval(iss_now, 3000);
+    </script>
+</head>
+<body onload="init()">
+    <div id="map" style="position:absolute;top:0;left:0;right:0;bottom:0;"></div>
+</body>
+</html>
